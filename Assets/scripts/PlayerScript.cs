@@ -21,6 +21,10 @@ public class PlayerScript : MonoBehaviour {
 	public float rbForce = 1;
 	public float absVel = 4;
 
+	private float flyYPos = 0.5f;
+
+	private float flyYVel = 1f;
+
 	//right,left,up,down
 	private bool[] keys = {false,false,false,false};
 
@@ -57,18 +61,42 @@ public class PlayerScript : MonoBehaviour {
 
    	void movement(){
 		if (keys [0]) {
+			rigidBody.isKinematic = true;
+			if(!flying)
+				flyYPos = transform.position.y+0.5f;
 			spriteRenderer.sprite = fly_sprite;
 			flying = true;
-			rigidBody.velocity = new Vector2 (rigidBody.velocity.x+rbForce, rigidBody.velocity.y);
+			rigidBody.velocity = new Vector2 (rigidBody.velocity.x+rbForce, flyYVel);
 			transform.rotation = Quaternion.Euler(new Vector3(0,0,-15));
 		} else if (keys [1]) {
+			rigidBody.isKinematic = true;
+			if(!flying)
+				flyYPos = transform.position.y+0.5f;
 			spriteRenderer.sprite = fly_sprite;
 			flying = true;
-			rigidBody.velocity = new Vector2 (rigidBody.velocity.x-rbForce, rigidBody.velocity.y);
+			rigidBody.velocity = new Vector2 (rigidBody.velocity.x-rbForce, flyYVel);
 			transform.rotation = Quaternion.Euler(new Vector3(0,180,-15));
 		} else {
+			rigidBody.isKinematic = false;
+			transform.rotation = Quaternion.Euler(new Vector3(0,transform.rotation.eulerAngles.y,0));
+		}
+
+		if (flying && transform.position.y > flyYPos) {
+			transform.position = new Vector3 (transform.position.x, flyYPos, transform.position.z);
+			flyYVel = 0f;
+		} else {
+			flyYVel = 1f;
+		}
+		
+		if (Mathf.Abs (rigidBody.velocity.x) > absVel) {
+			rigidBody.velocity = new Vector2(absVel*Mathf.Sign(rigidBody.velocity.x), rigidBody.velocity.y);
+		}
+	}
+
+	void OnCollisionEnter2D(Collision2D collision){
+		if (collision.gameObject.name == "Seperator(Clone)") {
 			flying = false;
-			transform.rotation = Quaternion.Euler(new Vector3(0,transform.rotation.y,0));
+			rigidBody.velocity = new Vector2 (0,rigidBody.velocity.y);
 		}
 	}
 
